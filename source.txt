@@ -35,7 +35,7 @@ LSD, SKI
 	CLA
 	CLE / clear extended bit to fix multiplication errors
     LDA MSD
-	MUL_16
+	BSA MUL_16
     ADD LSD
     STA SUM / store the sum
     HLT
