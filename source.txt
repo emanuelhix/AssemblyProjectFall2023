@@ -1,0 +1,75 @@
+// Parker Emanuel Hix 
+// 30 November 2023 
+// Fall 2023 - Assembly Project
+
+
+// MAIN PROGRAM \\
+    ORG 100
+/ get the most significant digit
+MSD, SKI
+    BUN MSD
+    CLA
+    INP
+    STA MSD
+
+/ get the least significant digit 
+LSD, SKI
+    BUN LSD
+    CLA
+    INP
+    STA LSD
+
+/ convert the ASCII characters to decimal representation
+    / convert least significant digit
+    CLA
+    LDA LSD
+    BSA ASCII_TO_DECIMAL
+    STA LSD / overwrite LSD ASCII with decimal representation
+    / convert most significant digit
+    CLA
+    LDA MSD
+    BSA ASCII_TO_DECIMAL
+    STA MSD / overwrite MSD ASCII with decimal representation
+	/ get the decimal representation using the hexadecimal to decimal algorithm
+    / MSD*16^1 + LSD*16^0
+	CLA
+	CLE / clear extended bit to fix multiplication errors
+    LDA MSD
+	MUL_16
+    ADD LSD
+    STA SUM / store the sum
+    HLT
+
+// SUBROUTINES \\
+ASCII_TO_DECIMAL, HEX 0
+    ADD ANCONST
+	/ if the AC is negative, then that means the digit is '0-9', so we won't return to the main program. 
+	SNA 
+		ADD AO
+    SNA 
+        BUN ASCII_TO_DECIMAL I
+    ADD ACONST / reverse the last operation
+    ADD 0NCONST
+    BUN ASCII_TO_DECIMAL I
+
+MUL_16, HEX 0
+	CIL
+	CIL
+	CIL
+	CIL
+	BUN MUL_16 I
+
+// VARIABLES \\
+SUM, DEC 0                / the sum of both inputs in decimal from
+TMP, DEC 0                / temporary storage, mostly used within functions
+X, DEC 0                / first operand for subroutines
+Y, DEC 0                / result of subroutines
+// CONSTANTS \\
+ANCONST, DEC -65        / ASCII 'A' decimal value (negative)
+0NCONST, DEC -48        / ASCII '0' decimal value (negative)
+ACONST,  DEC  65        / ASCII 'A' decimal value
+0CONST,  DEC  48        / ASCII '0' decimal value
+AO, DEC 10				/ Offset to get 'A-F' mapped to [10, 15] instead of [0,10]
+
+// END SOURCE FILE \\
+    END
