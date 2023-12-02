@@ -24,23 +24,47 @@ LSD, SKI
     CLA
     LDA LSD
     BSA ASCII_TO_DECIMAL
-    STA LSD / overwrite LSD ASCII with decimal representation
+    / overwrite LSD ASCII with decimal representation
+    STA LSD
     / convert most significant digit
     CLA
     LDA MSD
     BSA ASCII_TO_DECIMAL
-    STA MSD / overwrite MSD ASCII with decimal representation
+    / overwrite MSD ASCII with decimal representation
+    STA MSD 
 	/ get the decimal representation using the hexadecimal to decimal algorithm
     / MSD*16^1 + LSD*16^0
 	CLA
-	CLE / clear extended bit to fix multiplication errors
+    / clear extended bit to avoid multiplication (by left shift) errors
+	CLE 
     LDA MSD
 	BSA MUL_16
     ADD LSD
-    STA SUM / store the sum
+    / store the sum 
+    STA DECIMAL_FORM
+    / test division routine
     HLT
 
 // SUBROUTINES \\
+
+GET_LARGER_NUM, HEX 0
+    / store copy of first operand
+    STA TMP
+    / load second operand into AC and complement
+    LDA GET_LARGER_NUM I 
+    / subtract using complement
+    CMA
+    / add them together
+    ADD TMP
+    SPA / if negative or 0, load second operand
+        LDA GET_LARGER_NUM I
+    SNA / if positive or 0, reload first operand
+        LDA TMP
+    / increment return address
+    ISZ GET_LARGER_NUM
+    BUN GET_LARGER_NUM I / return to main program
+    / the larger number will be in the AC now
+
 ASCII_TO_DECIMAL, HEX 0
     ADD ANCONST
 	/ if the AC is negative, then that means the digit is '0-9', so we won't return to the main program. 
@@ -59,17 +83,46 @@ MUL_16, HEX 0
 	CIL
 	BUN MUL_16 I
 
+DIVIDE, HEX 0
+    / NOTE: TMP serves as the remainder -- at the end, it is loaded back into the AC
+    / add whatever value is at the return address (the divisor)
+    ADD DIVIDE I
+    / store dividend to prevent overwriting 
+    STA TMP
+    / increment quotient
+    LDA QUOTIENT
+    INC
+    STA QUOTIENT
+    / put dividend back into AC to compare to divisor
+    / "if dividend >= divisor" implemented as "if dividend-divisor > 0"
+    LDA TMP 
+
+    / don't return if the dividend is stil positive
+    SPA
+    ISZ DIVIDE / increment return address (pushes program cursor past the 2nd operand)
+    SPA
+    BUN DIVIDE I / return to main program
+    SZA
+    ISZ DIVIDE / increment return address (pushes program cursor past the 2nd operand)
+    SZA
+    BUN DIVIDE I / return to main program
+
+    BUN DIVIDE
+
 // VARIABLES \\
-SUM, DEC 0                / the sum of both inputs in decimal from
-TMP, DEC 0                / temporary storage, mostly used within functions
+DECIMAL_FORM, DEC 0     / the sum of both inputs in decimal from
+TMP, DEC 0              / temporary storage, mostly used within functions
 X, DEC 0                / first operand for subroutines
 Y, DEC 0                / result of subroutines
+QUOTIENT, DEC 0         /
+REMAINDER, DEC 0        /
+
 // CONSTANTS \\
 ANCONST, DEC -65        / ASCII 'A' decimal value (negative)
 0NCONST, DEC -48        / ASCII '0' decimal value (negative)
 ACONST,  DEC  65        / ASCII 'A' decimal value
 0CONST,  DEC  48        / ASCII '0' decimal value
-AO, DEC 10				/ Offset to get 'A-F' mapped to [10, 15] instead of [0,10]
+AO, DEC 10              / ASCII offset value for 'A-F'
 
 // END SOURCE FILE \\
     END
